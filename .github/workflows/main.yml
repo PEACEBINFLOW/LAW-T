@@ -1,0 +1,92 @@
+name: CI • LAW-T
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:     [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+
+# prevent overlapping runs on the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint • Test • Smoke-run
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # light dev tooling (safe if absent)
+          pip install pytest ruff || true
+
+      - name: Lint (ruff)
+        run: |
+          ruff --version || echo "ruff missing, skipping"
+          ruff check . || true  # warn-only for now
+
+      - name: Run unit tests (pytest)
+        run: |
+          pytest -q || true     # flip to hard-fail once tests exist
+
+      - name: Smoke run: add example law & list ledger
+        run: |
+          python src/main.py law add examples/laws/for_each.law.yaml
+          python src/main.py ledger list
+        env:
+          # example envs (add real ones if your CLI needs them)
+          LAW_T_LEDGER_DIR: .lawt-ledger-ci
+
+      - name: Upload ledger artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lawt-ledger-${{ matrix.python-version }}
+          path: .lawt-ledger-ci
+          if-no-files-found: ignore
+
+  release:
+    name: Create GitHub Release (tag push)
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write   # needed to create a release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download ledger artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/**/*
