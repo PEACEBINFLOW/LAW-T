@@ -1,0 +1,14 @@
+law:
+  name: for-each
+  tlb: "@t[demo]"
+  form: 'For(name, Iterable, Body)'
+  meaning: 'Desugar to iterator.next() loop with order preserved'
+  obligation:
+    typing: 'Γ ⊢ Iterable : Iterator<T> ∧ Γ[x:T] ⊢ Body : Unit'
+    effects: 'Body.effects ⊆ allowed'
+    determinism: 'preserves order'
+  proofs:
+    tests:
+      - spec/for-each/case-001.lawtest
+    properties:
+      - 'count(for-each(xs)) == len(xs)'
