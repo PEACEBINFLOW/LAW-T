@@ -1,5 +1,13 @@
 # LAW-T: A Time-Labeled Self-Evolving Programming System
 
+[![Build Status](https://github.com/PEACEBINFLOW/LAW-T/actions/workflows/test.yml/badge.svg)](https://github.com/PEACEBINFLOW/LAW-T/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Status](https://img.shields.io/badge/status-prototype-orange)
+
+> A temporal programming framework where code evolves lawfully through time-labeled computation and self-governing syntax.
+# LAW-T: A Time-Labeled Self-Evolving Programming System
+
 **Author:** Peace Thabiwa (SageWorks AI)  
 **Status:** Thesis + Prototype skeleton
 
